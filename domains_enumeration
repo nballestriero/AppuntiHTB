@@ -1,2 +1,4 @@
 gobuster vhost -u http://devvortex.htb  -w ./wordlists/Discovery/DNS/bitquark-subdomains-top100000.txt --append-domain 
 help to find subdomain like dev.devvortex.htb
+
+Joomla: https://hackertarget.com/attacking-enumerating-joomla/
